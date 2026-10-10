@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Khelar · Match Planner
 
-## Getting Started
+A small, mobile-first planner for our indoor football bookings. We record the slots we've booked with venues, so nobody double-books or forgets a booking. The app doesn't book anything with the venues.
 
-First, run the development server:
+Stack: Next.js 16 (App Router), TypeScript, Tailwind CSS 4, Supabase Postgres. It needs no other backend or state library.
+
+## How it works
+
+- **No login:** anyone with the app's link can view, add, edit, cancel and delete bookings. Keep the link within the team. Each booking records **Booked by** as a typed name. Mahadi and Shorup are one-tap suggestions, and each device remembers the last name used.
+- **Data access:** all reads (`GET /api/bookings`) and writes (Server Actions in `src/app/actions.ts`) run on the server with the publishable key. The browser never talks to Supabase directly. Database policies allow read, insert, update and delete.
+- **Time:** everything is entered and shown in **Asia/Dhaka**, converted explicitly with `Intl` (`src/lib/time.ts`), and stored as `timestamptz`. The device's own time zone is never used.
+- **Squad and result:** each booking can hold a player list (up to 30, with past players offered as one-tap suggestions) and a score. Win, draw or loss is worked out from the score. Both show in the details, the list, and the copied match details.
+- **Concurrency:** edits and cancellations only apply if `updated_at` still matches what you loaded. If someone else changed the booking, you're asked to load the latest version.
+
+## Setup
+
+1. **Create the table.** In Supabase, go to **SQL Editor**. Run each file in [`supabase/migrations/`](supabase/migrations/), oldest first:
+   - `20261011000000_bookings.sql` creates the table, constraints, the `start_at` index, the timestamp trigger and the access policies.
+   - `20261012000000_squad_and_result.sql` adds the squad list and the match result.
+   - `20261013000000_allow_delete.sql` allows deleting bookings.
+2. **Configure the app:**
+
+   ```bash
+   cp .env.example .env.local   # fill in SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY
+   npm install
+   npm run dev                  # http://localhost:3000
+   ```
+
+   - Both values are in Supabase under **Project Settings → API**.
+   - The app doesn't need the secret or `service_role` key.
+   - If a value is missing, the app shows a "Not connected to Supabase" screen rather than any data.
+3. **Deploy (e.g. Vercel).** Set the same two environment variables in the host. Don't commit `.env.local`, because `.gitignore` excludes it.
+
+To change the suggested names, edit [`src/config/bookers.ts`](src/config/bookers.ts). Any name can still be typed. Known names are matched regardless of case, so "mahadi" is saved as "Mahadi".
+
+## Scripts
+
+| Command         | What it does                                         |
+| --------------- | ---------------------------------------------------- |
+| `npm run dev`   | Start the dev server                                 |
+| `npm run build` | Production build                                     |
+| `npm run check` | Type check, lint and unit tests                      |
+| `npm test`      | Unit tests: time zones, validation, overlaps, squad, result |
+
+## Local Supabase (optional)
+
+With Docker running:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx supabase start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This applies the migration. Point `.env.local` at the local URL and publishable key printed by `npx supabase status`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Cancel or delete:** **Cancel** moves a booking to the Cancelled tab, and **Edit / restore** brings it back. **Delete** removes it permanently after a confirmation, and can't be undone.
+- **"Past":** a booking is Past once its end time has passed. That doesn't mean the match was played.
+- **Overlaps:** overlap checks ignore cancelled bookings. Back-to-back slots are not overlaps. A warning can be overridden on purpose with **Save anyway**. Editing only the squad, result or notes doesn't warn again.
+- **Updates:** there are no realtime updates. The dashboard refetches when it loads, when the window regains focus, after every change, and when you tap the refresh button.
