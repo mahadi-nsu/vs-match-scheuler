@@ -1,10 +1,10 @@
-import { amountDue, formatBdt, matchOutcome, OUTCOME_LABEL, STATUS_LABEL } from "./bookings.ts";
+import { amountDue, formatBdt, matchOutcome, matchTitle, OUTCOME_LABEL, STATUS_LABEL } from "./bookings.ts";
 import { formatDate, formatTimeRange } from "./time.ts";
 import type { Booking } from "./types.ts";
 
 /** Plain text that reads well when pasted into WhatsApp or Messenger. */
 export function matchShareText(b: Booking): string {
-  const title = b.opponentName ? `⚽ Match vs ${b.opponentName}` : "⚽ Football match";
+  const title = b.teamName || b.opponentName ? `⚽ ${b.teamName ? "" : "Match "}${matchTitle(b)}` : "⚽ Football match";
   const lines = [
     `*${title}*`,
     `📍 ${b.venueName}`,

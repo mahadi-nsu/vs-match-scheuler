@@ -45,6 +45,24 @@ export function rememberBooker(name: string) {
   }
 }
 
+const LAST_TEAM_KEY = "khelar:last-team-name";
+
+export function readLastTeam(): string | null {
+  try {
+    return window.localStorage.getItem(LAST_TEAM_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function rememberTeam(name: string | null) {
+  try {
+    if (name) window.localStorage.setItem(LAST_TEAM_KEY, name);
+  } catch {
+    // storage unavailable
+  }
+}
+
 /** Tries the async Clipboard API, then the legacy execCommand path. */
 export async function copyText(text: string): Promise<boolean> {
   try {

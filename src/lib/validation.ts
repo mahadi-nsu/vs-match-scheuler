@@ -11,6 +11,7 @@ import {
 export const LIMITS = {
   venueName: 120,
   bookedBy: 60,
+  teamName: 120,
   opponentName: 120,
   contactPhone: 40,
   mapUrl: 2048,
@@ -27,6 +28,7 @@ const FIELDS: Exclude<keyof BookingFormInput, "squad">[] = [
   "endLocal",
   "bookedBy",
   "status",
+  "teamName",
   "opponentName",
   "totalCost",
   "advancePaid",
@@ -142,6 +144,9 @@ export function validateBooking(input: BookingFormInput): ValidationResult {
   const status = input.status as BookingStatus;
   if (!STATUSES.includes(status)) errors.status = "Choose a status.";
 
+  const teamName = optional(input.teamName)?.replace(/\s+/g, " ") ?? null;
+  if (teamName && teamName.length > LIMITS.teamName) errors.teamName = `Keep it under ${LIMITS.teamName} characters.`;
+
   const opponentName = optional(input.opponentName);
   if (opponentName && opponentName.length > LIMITS.opponentName)
     errors.opponentName = `Keep it under ${LIMITS.opponentName} characters.`;
@@ -183,6 +188,7 @@ export function validateBooking(input: BookingFormInput): ValidationResult {
       endAt: end.toISOString(),
       bookedBy,
       status,
+      teamName,
       opponentName,
       totalCost,
       advancePaid,

@@ -28,6 +28,8 @@ async function withDb(run: (db: Db) => Promise<MutationResult>): Promise<Mutatio
     }
     if (error instanceof RepoError) {
       if (error.code === "23514") return { ok: false, kind: "invalid", message: "Some values were rejected. Check the form and try again." };
+      if (error.code === "PGRST204" || error.code === "42703")
+        return { ok: false, kind: "error", message: "The database is missing a new column. Run the latest SQL migration in Supabase." };
       if (error.code === "42501")
         return { ok: false, kind: "error", message: "The database doesn't allow this yet. Run the latest SQL migration in Supabase." };
       console.error("Booking mutation failed:", error.code ?? "unknown");

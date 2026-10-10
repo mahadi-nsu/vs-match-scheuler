@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { amountDue, findOverlaps, formatBdt, isLive, isPast, matchOutcome, OUTCOME_LABEL } from "@/lib/bookings";
+import { amountDue, findOverlaps, formatBdt, isLive, isPast, matchOutcome, matchTitle, OUTCOME_LABEL } from "@/lib/bookings";
 import {
   calendarDaysUntil,
   formatDate,
@@ -86,7 +86,7 @@ export function BookingDetails({
           <span className="text-sm font-semibold text-pitch-200">{when(b, now)}</span>
         </div>
         <h3 id={`booking-${b.id}-title`} className="font-display mt-2 text-3xl font-bold uppercase leading-tight">
-          {b.opponentName ? `vs ${b.opponentName}` : "Opponent TBC"}
+          {matchTitle(b)}
         </h3>
         <p className="mt-1 flex items-center gap-1.5 text-slate-200">
           <PinIcon width={16} height={16} className="shrink-0 text-pitch-300" />
@@ -110,7 +110,7 @@ export function BookingDetails({
             <p className="font-display text-4xl font-extrabold leading-none" aria-label={`${b.ourScore} to ${b.opponentScore}, ${OUTCOME_LABEL[outcome]}`}>
               {b.ourScore} <span className="text-slate-500">–</span> {b.opponentScore}
             </p>
-            <p className="mt-1 text-xs text-slate-400">Us – {b.opponentName ?? "Opponent"}</p>
+            <p className="mt-1 text-xs text-slate-400">{b.teamName ?? "Us"} – {b.opponentName ?? "Opponent"}</p>
           </div>
           <OutcomeBadge outcome={outcome} large />
         </div>

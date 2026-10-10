@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { createBooking, updateBooking } from "@/app/actions";
 import { BOOKERS } from "@/config/bookers";
 import { STATUS_LABEL } from "@/lib/bookings";
-import { readLastBooker, rememberBooker } from "@/lib/client";
+import { readLastBooker, readLastTeam, rememberBooker, rememberTeam } from "@/lib/client";
 import { addMinutesLocal, dateToDhakaLocal, dhakaLocalToDate, formatDate, formatTimeRange } from "@/lib/time";
 import type { Booking, BookingFormInput, FieldErrors, MutationResult, OverlapSummary } from "@/lib/types";
 import { validateBooking } from "@/lib/validation";
@@ -36,6 +36,7 @@ function initialValues(booking: Booking | null): BookingFormInput {
       endLocal: dateToDhakaLocal(booking.endAt),
       bookedBy: booking.bookedBy,
       status: booking.status,
+      teamName: booking.teamName ?? "",
       opponentName: booking.opponentName ?? "",
       totalCost: booking.totalCost?.toString() ?? "",
       advancePaid: booking.advancePaid?.toString() ?? "",
@@ -53,6 +54,7 @@ function initialValues(booking: Booking | null): BookingFormInput {
     endLocal: "",
     bookedBy: readLastBooker() ?? "", // this device's last "Booked by"
     status: "confirmed",
+    teamName: readLastTeam() ?? "", // this device's last team name
     opponentName: "",
     totalCost: "",
     advancePaid: "",
@@ -150,6 +152,7 @@ export function BookingForm({ formId, booking, onSaved, onReloadLatest, onSaving
 
     if (result.ok) {
       rememberBooker(result.booking.bookedBy);
+      rememberTeam(result.booking.teamName);
       onSaved(result.booking);
       return;
     }
@@ -238,12 +241,20 @@ export function BookingForm({ formId, booking, onSaved, onReloadLatest, onSaving
         children: <input {...field("venueName")} className="field-input" autoComplete="off" placeholder="e.g. Kick-Off Arena, Banani" required />,
       })}
 
-      {renderField({
-        name: "opponentName",
-        label: "Opponent",
-        hint: "Optional — leave blank if not fixed yet.",
-        children: <input {...field("opponentName")} className="field-input" autoComplete="off" placeholder="e.g. Gulshan Strikers" />,
-      })}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {renderField({
+          name: "teamName",
+          label: "Our team",
+          hint: "Optional — shown as “Team vs Opponent”.",
+          children: <input {...field("teamName")} className="field-input" autoComplete="off" autoCapitalize="words" placeholder="e.g. Khelar FC" />,
+        })}
+        {renderField({
+          name: "opponentName",
+          label: "Opponent",
+          hint: "Optional — leave blank if not fixed yet.",
+          children: <input {...field("opponentName")} className="field-input" autoComplete="off" autoCapitalize="words" placeholder="e.g. Gulshan Strikers" />,
+        })}
+      </div>
 
       <fieldset className="rounded-2xl border border-white/10 p-3.5">
         <legend className="px-1 text-sm font-semibold text-slate-200">

@@ -80,3 +80,9 @@ export function knownPlayers(bookings: Booking[]): string[] {
   }
   return [...counts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).map((e) => e.name);
 }
+
+/** "Khelar FC vs Gulshan Strikers", "vs Gulshan Strikers", "Khelar FC vs TBC" or "Opponent TBC". */
+export function matchTitle(b: Pick<Booking, "teamName" | "opponentName">): string {
+  if (b.teamName) return `${b.teamName} vs ${b.opponentName ?? "TBC"}`;
+  return b.opponentName ? `vs ${b.opponentName}` : "Opponent TBC";
+}

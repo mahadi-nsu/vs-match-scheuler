@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { findOverlaps, knownPlayers, matchOutcome, nextConfirmedMatch, overlaps, splitBookings } from "../src/lib/bookings.ts";
+import { findOverlaps, knownPlayers, matchOutcome, matchTitle, nextConfirmedMatch, overlaps, splitBookings } from "../src/lib/bookings.ts";
 import { matchShareText } from "../src/lib/share.ts";
 import {
   addMinutesLocal,
@@ -22,6 +22,7 @@ const booking = (over: Partial<Booking> = {}): Booking => ({
   endAt: "2026-10-15T14:30:00.000Z", // 8:30 PM Dhaka
   bookedBy: BOOKERS[0],
   status: "confirmed",
+  teamName: null,
   opponentName: "Gulshan Strikers",
   totalCost: 3000,
   advancePaid: 1000,
@@ -42,6 +43,7 @@ const input = (over: Partial<BookingFormInput> = {}): BookingFormInput => ({
   endLocal: "2026-10-15T20:30",
   bookedBy: BOOKERS[0],
   status: "confirmed",
+  teamName: "",
   opponentName: "",
   totalCost: "",
   advancePaid: "",
@@ -157,6 +159,26 @@ describe("squad and result", () => {
     const list = knownPlayers([booking({ squad: ["Rafi", "Mahadi"] }), booking({ squad: ["mahadi", "Tanvir"] })]);
     assert.equal(list[0], "Mahadi");
     assert.deepEqual(list.slice(1).sort(), ["Rafi", "Tanvir"]);
+  });
+});
+
+describe("team name", () => {
+  it("is optional, trimmed, and length-limited", () => {
+    const empty = validateBooking(input({ teamName: "   " }));
+    assert.ok(empty.ok && empty.value.teamName === null);
+    const named = validateBooking(input({ teamName: "  Khelar   FC " }));
+    assert.ok(named.ok && named.value.teamName === "Khelar FC");
+    assert.ok(!validateBooking(input({ teamName: "x".repeat(121) })).ok);
+  });
+  it("builds the match title", () => {
+    assert.equal(matchTitle({ teamName: "Khelar FC", opponentName: "Gulshan Strikers" }), "Khelar FC vs Gulshan Strikers");
+    assert.equal(matchTitle({ teamName: null, opponentName: "Gulshan Strikers" }), "vs Gulshan Strikers");
+    assert.equal(matchTitle({ teamName: "Khelar FC", opponentName: null }), "Khelar FC vs TBC");
+    assert.equal(matchTitle({ teamName: null, opponentName: null }), "Opponent TBC");
+  });
+  it("puts the team in the share text", () => {
+    assert.match(matchShareText(booking({ teamName: "Khelar FC" })), /^\*⚽ Khelar FC vs Gulshan Strikers\*/);
+    assert.match(matchShareText(booking()), /^\*⚽ Match vs Gulshan Strikers\*/);
   });
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { isLive, matchOutcome, overlaps } from "@/lib/bookings";
+import { isLive, matchOutcome, matchTitle, overlaps } from "@/lib/bookings";
 import { formatDay, formatMonth, formatShortWeekday, formatTimeRange, relativeDayLabel } from "@/lib/time";
 import type { Booking } from "@/lib/types";
 import { AlertIcon, PinIcon } from "./icons";
@@ -48,7 +48,7 @@ export function BookingList({ bookings, allBookings, selectedId, now, showRelati
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <p className={`line-clamp-2 min-w-0 break-words font-semibold ${b.status === "cancelled" ? "line-through decoration-rose-300/60" : ""}`}>
-                    {b.opponentName ? `vs ${b.opponentName}` : "Opponent TBC"}
+                    {matchTitle(b)}
                   </p>
                   {outcome ? (
                     <OutcomeBadge outcome={outcome} score={`${b.ourScore}–${b.opponentScore}`} />

@@ -2,8 +2,9 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Booking, BookingPayload, BookingStatus, OverlapSummary } from "./types";
 
-const COLUMNS =
-  "id, venue_name, start_at, end_at, booked_by, status, opponent_name, total_cost, advance_paid, contact_phone, map_url, notes, squad, our_score, opponent_score, created_at, updated_at";
+// "*" (not a column list) so reads keep working while a new optional column's
+// migration hasn't been run yet; toBooking() picks out the fields it knows.
+const COLUMNS = "*";
 
 type Row = {
   id: string;
@@ -12,6 +13,8 @@ type Row = {
   end_at: string;
   booked_by: string;
   status: BookingStatus;
+  /** Optional until the team_name migration has run. */
+  team_name?: string | null;
   opponent_name: string | null;
   total_cost: number | string | null;
   advance_paid: number | string | null;
@@ -36,6 +39,7 @@ function toBooking(row: Row): Booking {
     endAt: new Date(row.end_at).toISOString(),
     bookedBy: row.booked_by,
     status: row.status,
+    teamName: row.team_name ?? null,
     opponentName: row.opponent_name,
     totalCost: toNumber(row.total_cost),
     advancePaid: toNumber(row.advance_paid),
@@ -58,6 +62,7 @@ function toRow(p: BookingPayload) {
     end_at: p.endAt,
     booked_by: p.bookedBy,
     status: p.status,
+    team_name: p.teamName,
     opponent_name: p.opponentName,
     total_cost: p.totalCost,
     advance_paid: p.advancePaid,

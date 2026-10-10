@@ -9,6 +9,8 @@ export type Booking = {
   endAt: string;
   bookedBy: string;
   status: BookingStatus;
+  /** Our own team's name for this match, if set. */
+  teamName: string | null;
   opponentName: string | null;
   totalCost: number | null;
   advancePaid: number | null;
@@ -30,6 +32,7 @@ export type BookingFormInput = {
   endLocal: string;
   bookedBy: string;
   status: string;
+  teamName: string;
   opponentName: string;
   totalCost: string;
   advancePaid: string;
@@ -48,6 +51,7 @@ export type BookingPayload = {
   endAt: string;
   bookedBy: string;
   status: BookingStatus;
+  teamName: string | null;
   opponentName: string | null;
   totalCost: number | null;
   advancePaid: number | null;
